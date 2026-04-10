@@ -423,6 +423,134 @@
       font-size: 12px;
       color: var(--ink3);
     }
+
+    /* ── HERO THUMBNAIL in list ── */
+    .element-hero {
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .element-hero-empty {
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    /* ── URL SECTION ── */
+    .media-section { padding: 0 20px; margin-bottom: 20px; }
+    .media-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink2);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .url-input {
+      width: 100%;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .url-input:focus { border-color: var(--accent); }
+    .url-input::placeholder { color: var(--ink3); }
+    .url-card {
+      display: none;
+      margin-top: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-decoration: none;
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .url-card.visible { display: block; }
+    .url-card-label {
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    /* ── IMAGE SLOTS ── */
+    .images-section { padding: 0 20px; margin-bottom: 24px; }
+    .image-slots {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .image-slot {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px dashed var(--border);
+      background: var(--bg2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .image-slot.has-image { border: 1px solid var(--border); }
+    .image-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+    .image-slot-add { font-size: 22px; color: var(--ink3); line-height: 1; }
+    .image-slot-hint {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      color: var(--ink3);
+    }
+    .image-slot-actions {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      background: rgba(0,0,0,0.55);
+      padding: 4px;
+      gap: 4px;
+      justify-content: space-between;
+    }
+    .img-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .img-btn.hero-btn.active { color: #FFD700; }
+    .img-btn.del-btn { color: #ff8a8a; }
+    .hero-badge {
+      position: absolute;
+      top: 5px; right: 5px;
+      font-size: 12px;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+    }
+    .img-file-input { display: none; }
   </style>
 </head>
 <body>
@@ -473,6 +601,42 @@
       <div class="cabinet-dots" id="cabinet-dots"></div>
     </div>
   </div>
+  <!-- hidden file inputs -->
+  <input type="file" accept="image/*" class="img-file-input" id="img-input-0" onchange="handleImageUpload(0,this)">
+  <input type="file" accept="image/*" class="img-file-input" id="img-input-1" onchange="handleImageUpload(1,this)">
+  <input type="file" accept="image/*" class="img-file-input" id="img-input-2" onchange="handleImageUpload(2,this)">
+
+  <!-- URL -->
+  <div class="media-section" style="padding-top:16px;">
+    <span class="media-label">Reference URL</span>
+    <input class="url-input" id="drawer-url" type="url"
+      placeholder="paste a YouTube, Bilibili, RedNote or any URL..."
+      oninput="updateUrlCard()" />
+    <a class="url-card" id="url-card" target="_blank" rel="noopener">
+      <div class="url-card-label">↗ open link</div>
+      <div id="url-card-text"></div>
+    </a>
+  </div>
+
+  <!-- Images -->
+  <div class="images-section">
+    <span class="media-label">Images · tap to add · ★ = cover</span>
+    <div class="image-slots">
+      <div class="image-slot" id="slot-0" onclick="slotClick(0)">
+        <div class="image-slot-add">+</div>
+        <div class="image-slot-hint">photo or drawing</div>
+      </div>
+      <div class="image-slot" id="slot-1" onclick="slotClick(1)">
+        <div class="image-slot-add">+</div>
+        <div class="image-slot-hint">photo or drawing</div>
+      </div>
+      <div class="image-slot" id="slot-2" onclick="slotClick(2)">
+        <div class="image-slot-add">+</div>
+        <div class="image-slot-hint">photo or drawing</div>
+      </div>
+    </div>
+  </div>
+
   <div class="cabinet-body">
     <div class="drawer">
       <div class="drawer-label"><span class="drawer-label-dot" id="dot-year"></span>Year / Era</div>
@@ -669,11 +833,107 @@ ELEMENTS.sort((a, b) => a.name.localeCompare(b.name));
 
 // ── STATE ─────────────────────────────────────────────────────────────────
 
-let userData = {}; // { "Element Name": { year, origin, move, family, notes } }
+let userData = {};
 let currentElement = null;
-let githubSHA = null; // for updating the file
+let githubSHA = null;
+// images: array of 3 (base64 string or null), heroIndex: 0|1|2|null
+let currentImages = [null, null, null];
+let currentHero = null;
 
 const DRAWERS = ["year", "origin", "move", "family", "notes"];
+
+// ── IMAGE HELPERS ──────────────────────────────────────────────────────────
+
+function compressImage(file, maxPx = 900, quality = 0.75) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxPx || h > maxPx) {
+        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.src = url;
+  });
+}
+
+function slotClick(i) {
+  if (currentImages[i]) return; // has image — buttons handle actions
+  document.getElementById(`img-input-${i}`).click();
+}
+
+async function handleImageUpload(i, input) {
+  if (!input.files[0]) return;
+  showToast("Compressing image...");
+  const b64 = await compressImage(input.files[0]);
+  currentImages[i] = b64;
+  if (currentHero === null) currentHero = i;
+  renderImageSlots();
+  input.value = "";
+}
+
+function setHero(i) {
+  currentHero = i;
+  renderImageSlots();
+}
+
+function deleteImage(i) {
+  currentImages[i] = null;
+  if (currentHero === i) {
+    currentHero = currentImages.findIndex(x => x !== null);
+    if (currentHero === -1) currentHero = null;
+  }
+  renderImageSlots();
+}
+
+function renderImageSlots() {
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById(`slot-${i}`);
+    const img = currentImages[i];
+    const isHero = currentHero === i;
+    if (img) {
+      slot.classList.add("has-image");
+      slot.onclick = null;
+      slot.innerHTML = `
+        <img src="${img}" />
+        ${isHero ? '<div class="hero-badge">★</div>' : ''}
+        <div class="image-slot-actions">
+          <button class="img-btn hero-btn ${isHero ? 'active' : ''}"
+            onclick="event.stopPropagation();setHero(${i})">★ cover</button>
+          <button class="img-btn del-btn"
+            onclick="event.stopPropagation();deleteImage(${i})">✕</button>
+        </div>`;
+    } else {
+      slot.classList.remove("has-image");
+      slot.onclick = () => slotClick(i);
+      slot.innerHTML = `
+        <div class="image-slot-add">+</div>
+        <div class="image-slot-hint">photo or drawing</div>`;
+    }
+  }
+}
+
+// ── URL HELPER ─────────────────────────────────────────────────────────────
+
+function updateUrlCard() {
+  const val = document.getElementById("drawer-url").value.trim();
+  const card = document.getElementById("url-card");
+  const text = document.getElementById("url-card-text");
+  if (val) {
+    card.href = val;
+    text.textContent = val;
+    card.classList.add("visible");
+  } else {
+    card.classList.remove("visible");
+  }
+}
 
 // ── GITHUB ────────────────────────────────────────────────────────────────
 
@@ -830,7 +1090,12 @@ function renderList() {
       const dots = prog.map(f =>
         `<div class="dot ${f ? "filled" : ""}"></div>`
       ).join("");
+      const d = userData[el.name] || {};
+      const heroImg = (d.images && d.hero !== null && d.hero !== undefined && d.images[d.hero])
+        ? `<img class="element-hero" src="${d.images[d.hero]}" />`
+        : `<div class="element-hero-empty"></div>`;
       html += `<div class="element-row" onclick="openCabinet('${el.name.replace(/'/g, "\\'")}')">
+        ${heroImg}
         <div class="element-names">
           <div class="element-name">${el.name}</div>
           <div class="element-chinese">${el.chinese}</div>
@@ -866,10 +1131,25 @@ function openCabinet(name) {
     updateDrawerDot(k, data[k]);
   });
 
+  // URL
+  const urlEl = document.getElementById("drawer-url");
+  urlEl.value = data.url || "";
+  updateUrlCard();
+
+  // Images
+  currentImages = data.images ? [...data.images] : [null, null, null];
+  while (currentImages.length < 3) currentImages.push(null);
+  currentHero = data.hero !== undefined ? data.hero : null;
+  if (currentHero === null) {
+    const first = currentImages.findIndex(x => x !== null);
+    if (first !== -1) currentHero = first;
+  }
+  renderImageSlots();
+
   updateCabinetDots();
   document.getElementById("save-status").textContent = "";
   document.getElementById("cabinet").classList.add("active");
-  window.scrollTo(0, 0);
+  document.getElementById("cabinet").scrollTop = 0;
 }
 
 function closeCabinet() {
@@ -914,6 +1194,10 @@ async function saveCabinet() {
   DRAWERS.forEach(k => {
     data[k] = document.getElementById(`drawer-${k}`).value;
   });
+  data.url = document.getElementById("drawer-url").value.trim();
+  data.images = [...currentImages];
+  data.hero = currentHero;
+
   userData[currentElement.name] = data;
 
   const ok = await saveToGitHub();
@@ -925,7 +1209,6 @@ async function saveCabinet() {
     showToast("Saved to GitHub");
   } else {
     status.textContent = "error — try again";
-    showToast("Save failed — check connection");
   }
 }
 

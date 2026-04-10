@@ -685,54 +685,78 @@ function getConfig() {
   };
 }
 
-async function githubFetch(path, method = "GET", body = null) {
-  const { token } = getConfig();
-  const opts = {
-    method,
-    headers: {
-      "Authorization": `token ${token}`,
-      "Content-Type": "application/json",
-    },
-  };
-  if (body) opts.body = JSON.stringify(body);
-  return fetch(`https://api.github.com/repos/${getConfig().repo}/contents/${getConfig().file}` + (path || ""), opts);
+function getApiUrl() {
+  const { repo, file } = getConfig();
+  return `https://api.github.com/repos/${repo}/contents/${file}`;
+}
+
+function toBase64(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+    String.fromCharCode(parseInt(p1, 16))
+  ));
+}
+
+function fromBase64(str) {
+  return decodeURIComponent(Array.from(atob(str)).map(c =>
+    '%' + c.charCodeAt(0).toString(16).padStart(2, '0')
+  ).join(''));
 }
 
 async function loadFromGitHub() {
+  const { token } = getConfig();
   try {
-    const res = await githubFetch("");
+    const res = await fetch(getApiUrl(), {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+      }
+    });
     if (res.status === 404) {
-      // File doesn't exist yet — that's fine
       userData = {};
       githubSHA = null;
       return;
     }
+    if (!res.ok) {
+      const err = await res.json();
+      showToast(`Load error: ${err.message}`);
+      return;
+    }
     const json = await res.json();
     githubSHA = json.sha;
-    const decoded = atob(json.content.replace(/\n/g, ""));
-    userData = JSON.parse(decoded);
+    userData = JSON.parse(fromBase64(json.content.replace(/\n/g, "")));
   } catch (e) {
-    showToast("Could not load data from GitHub");
+    showToast(`Load error: ${e.message}`);
   }
 }
 
 async function saveToGitHub() {
-  const { repo, file } = getConfig();
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(userData, null, 2))));
+  const { token } = getConfig();
+  const content = toBase64(JSON.stringify(userData, null, 2));
   const body = {
     message: "update yuansu data",
     content,
     ...(githubSHA ? { sha: githubSHA } : {}),
   };
   try {
-    const res = await githubFetch("", "PUT", body);
-    const json = await res.json();
-    if (json.content) {
-      githubSHA = json.content.sha;
-      return true;
+    const res = await fetch(getApiUrl(), {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      showToast(`Save error: ${err.message}`);
+      return false;
     }
-    return false;
+    const json = await res.json();
+    githubSHA = json.content.sha;
+    return true;
   } catch (e) {
+    showToast(`Save error: ${e.message}`);
     return false;
   }
 }

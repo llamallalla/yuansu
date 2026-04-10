@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>元素</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F6F3ED;
+      --bg2: #EDEAE2;
+      --ink: #1A1816;
+      --ink2: #5C5750;
+      --ink3: #9C9590;
+      --accent: #B84A2E;
+      --accent2: #E8D5C0;
+      --dot-empty: #D8D3CA;
+      --dot-fill: #B84A2E;
+      --border: #DDD8D0;
+      --white: #FDFCFA;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SETUP SCREEN ── */
+    #setup-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      padding: 40px 24px;
+      overflow-y: auto;
+    }
+    #setup-screen.active { display: block; }
+
+    .setup-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .setup-sub {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--ink3);
+      letter-spacing: 0.1em;
+      margin-bottom: 36px;
+    }
+    .setup-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--ink2);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .setup-hint {
+      font-size: 12px;
+      color: var(--ink3);
+      margin-bottom: 14px;
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .setup-input {
+      width: 100%;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 24px;
+      outline: none;
+    }
+    .setup-input:focus { border-color: var(--accent); }
+
+    .setup-btn {
+      width: 100%;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      padding: 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .app-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .app-title span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--ink3);
+      letter-spacing: 0.1em;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+    .header-progress {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--ink3);
+      letter-spacing: 0.08em;
+    }
+    .header-progress em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    /* search */
+    .search-wrap { position: relative; }
+    .search-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--ink);
+      outline: none;
+    }
+    .search-input::placeholder { color: var(--ink3); }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* ── LIST ── */
+    #list-view {
+      padding: 0 0 80px;
+    }
+
+    .category-section { margin-bottom: 4px; }
+
+    .category-header {
+      padding: 14px 20px 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 97px;
+      background: var(--bg);
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+    }
+    .category-emoji { font-size: 14px; }
+    .category-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink2);
+      flex: 1;
+    }
+    .category-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--ink3);
+    }
+
+    .element-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--white);
+      transition: background 0.1s;
+      gap: 12px;
+    }
+    .element-row:active { background: var(--accent2); }
+
+    .element-names { flex: 1; min-width: 0; }
+    .element-name {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .element-chinese {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 2px;
+    }
+
+    .element-dots {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--dot-empty);
+      transition: background 0.2s;
+    }
+    .dot.filled { background: var(--dot-fill); }
+
+    .element-arrow {
+      font-size: 12px;
+      color: var(--ink3);
+      flex-shrink: 0;
+    }
+
+    /* ── CABINET (drawer panel) ── */
+    #cabinet {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    #cabinet.active { display: block; }
+
+    .cabinet-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .cabinet-back {
+      background: none;
+      border: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .cabinet-title-wrap { flex: 1; }
+    .cabinet-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+    .cabinet-chinese {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 3px;
+    }
+    .cabinet-dots {
+      display: flex;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .cabinet-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--dot-empty);
+    }
+    .cabinet-dot.filled { background: var(--dot-fill); }
+
+    .cabinet-body { padding: 20px; }
+
+    .drawer {
+      margin-bottom: 24px;
+    }
+    .drawer-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink2);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-label-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--dot-empty);
+      flex-shrink: 0;
+    }
+    .drawer-label-dot.filled { background: var(--dot-fill); }
+
+    .drawer-textarea {
+      width: 100%;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Lora', serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--ink);
+      resize: none;
+      min-height: 90px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .drawer-textarea:focus { border-color: var(--accent); }
+    .drawer-textarea::placeholder {
+      color: var(--ink3);
+      font-style: italic;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .cabinet-footer {
+      padding: 16px 20px 40px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .save-btn {
+      flex: 1;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+    .save-btn:disabled { opacity: 0.5; }
+    .save-status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      color: var(--ink3);
+    }
+
+    /* ── SETTINGS BTN ── */
+    #settings-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      z-index: 60;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: var(--bg);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 10px 18px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: all 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 300;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── NO RESULTS ── */
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      color: var(--ink3);
+    }
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-title">元素</div>
+  <div class="setup-sub">YUÁNSÙ — HIP HOP ELEMENTS</div>
+
+  <label class="setup-label">GitHub Personal Access Token</label>
+  <div class="setup-hint">Generate at github.com → Settings → Developer settings → Personal access tokens → Tokens (classic). Select the "repo" scope.</div>
+  <input class="setup-input" id="setup-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+
+  <label class="setup-label">Repository</label>
+  <div class="setup-hint">Your GitHub username and repo name, e.g. cici/yuansu. Create a new private repo first if needed.</div>
+  <input class="setup-input" id="setup-repo" type="text" placeholder="username/yuansu" autocomplete="off" />
+
+  <label class="setup-label">Data filename</label>
+  <div class="setup-hint">A JSON file that will store all your research. Leave as default unless you have a reason to change it.</div>
+  <input class="setup-input" id="setup-file" type="text" placeholder="yuansu-data.json" value="yuansu-data.json" />
+
+  <button class="setup-btn" onclick="saveSetup()">Begin →</button>
+</div>
+
+<!-- MAIN HEADER -->
+<div id="header">
+  <div class="header-top">
+    <div>
+      <span class="app-title">元素 <span>YUÁNSÙ</span></span>
+    </div>
+    <div class="header-progress" id="progress-display">0 / 120 furnished</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" id="search-input" placeholder="search name or 中文..." oninput="renderList()" />
+  </div>
+</div>
+
+<!-- LIST VIEW -->
+<div id="list-view"></div>
+
+<!-- CABINET -->
+<div id="cabinet">
+  <div class="cabinet-header">
+    <button class="cabinet-back" onclick="closeCabinet()">← back</button>
+    <div class="cabinet-title-wrap">
+      <div class="cabinet-title" id="cabinet-name"></div>
+      <div class="cabinet-chinese" id="cabinet-chinese"></div>
+      <div class="cabinet-dots" id="cabinet-dots"></div>
+    </div>
+  </div>
+  <div class="cabinet-body">
+    <div class="drawer">
+      <div class="drawer-label"><span class="drawer-label-dot" id="dot-year"></span>Year / Era</div>
+      <textarea class="drawer-textarea" id="drawer-year" rows="2"
+        placeholder="e.g. 1973 · or 'Late 1970s' · when did this emerge?"></textarea>
+    </div>
+    <div class="drawer">
+      <div class="drawer-label"><span class="drawer-label-dot" id="dot-origin"></span>Origin</div>
+      <textarea class="drawer-textarea" id="drawer-origin" rows="4"
+        placeholder="City, neighborhood, community... Who created it? Who popularized it? These are often different people."></textarea>
+    </div>
+    <div class="drawer">
+      <div class="drawer-label"><span class="drawer-label-dot" id="dot-move"></span>The Move</div>
+      <textarea class="drawer-textarea" id="drawer-move" rows="5"
+        placeholder="Start with your own understanding — what does the body actually do? Then add other descriptions you've found or heard in class."></textarea>
+    </div>
+    <div class="drawer">
+      <div class="drawer-label"><span class="drawer-label-dot" id="dot-family"></span>Movement Family</div>
+      <textarea class="drawer-textarea" id="drawer-family" rows="4"
+        placeholder="Which technique tradition does this belong to — footwork, wave, isolation, bounce...? Who used it, in what song or performance? Any connections to other elements?"></textarea>
+    </div>
+    <div class="drawer">
+      <div class="drawer-label"><span class="drawer-label-dot" id="dot-notes"></span>My Notes</div>
+      <textarea class="drawer-textarea" id="drawer-notes" rows="5"
+        placeholder="Anything — class observations, what you felt in your body, questions still open, why this matters to you..."></textarea>
+    </div>
+  </div>
+  <div class="cabinet-footer">
+    <button class="save-btn" id="save-btn" onclick="saveCabinet()">Save to GitHub</button>
+    <span class="save-status" id="save-status"></span>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings-btn" onclick="openSettings()" title="Settings">⚙</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id: "geography",  label: "Places & Cities",     emoji: "📍" },
+  { id: "music",      label: "Music References",    emoji: "🎵" },
+  { id: "cartoon",    label: "Cartoons & Film",     emoji: "🎬" },
+  { id: "celebrity",  label: "People & Icons",      emoji: "⭐" },
+  { id: "social",     label: "Social Dances",       emoji: "🕺" },
+  { id: "technique",  label: "Pure Technique",      emoji: "⚡" },
+  { id: "footwork",   label: "Footwork",            emoji: "👣" },
+  { id: "wave",       label: "Waves & Isolations",  emoji: "〰" },
+  { id: "battle",     label: "Battle & Cipher",     emoji: "🔥" },
+  { id: "fashion",    label: "Fashion & Brands",    emoji: "👟" },
+  { id: "sports",     label: "Sports",              emoji: "🏀" },
+  { id: "mime",       label: "Mime & Character",    emoji: "🎭" },
+];
+
+const ELEMENTS = [
+  // Geography
+  { name: "Atl Stomp",          chinese: "亚特兰大踹",    cat: "geography" },
+  { name: "Bankhead Bounce",    chinese: "肩膀律动",     cat: "geography" },
+  { name: "Bk Bounce",         chinese: "布鲁克林弹跳", cat: "geography" },
+  { name: "Brooklyn",          chinese: "布鲁克林",     cat: "geography" },
+  { name: "Charleston",        chinese: "查尔斯顿",     cat: "geography" },
+  { name: "Harlem Shake",      chinese: "哈林摇",       cat: "geography" },
+  { name: "Manhattan",         chinese: "曼哈顿",       cat: "geography" },
+  { name: "Monestary",         chinese: "俱乐部名称",   cat: "geography" },
+  // Music
+  { name: "Biz Markie",        chinese: "唱片名字",     cat: "music" },
+  { name: "Bobby Brown",       chinese: "波比布朗",     cat: "music" },
+  { name: "Chicken Noodle Soup", chinese: "一首歌名",   cat: "music" },
+  { name: "Creep",             chinese: "TLC团队的一首歌", cat: "music" },
+  { name: "Criss Cross",       chinese: "十字交叉步",   cat: "music" },
+  { name: "Funky Broadway",    chinese: "时尚百老汇",   cat: "music" },
+  { name: "Humpty Dance",      chinese: "一首歌名",     cat: "music" },
+  { name: "James Brown",       chinese: "詹姆斯布朗",   cat: "music" },
+  { name: "Janet Jackson",     chinese: "珍妮杰克逊",   cat: "music" },
+  { name: "Nae Nae",           chinese: "老奶奶",       cat: "music" },
+  { name: "Party Machine",     chinese: "派对节目",     cat: "music" },
+  { name: "Real Love",         chinese: "真爱",         cat: "music" },
+  { name: "Run It",            chinese: "运行它",       cat: "music" },
+  { name: "Sham Rock",         chinese: "音乐组合的名称", cat: "music" },
+  { name: "Shoulder Lean",     chinese: "肩膀的倾斜",   cat: "music" },
+  { name: "TLC",               chinese: "团队成员名字缩写", cat: "music" },
+  { name: "Toss It Up",        chinese: "一首歌曲",     cat: "music" },
+  { name: "Walk It Out",       chinese: "走出去",       cat: "music" },
+  { name: "Wu Tang",           chinese: "武当；说唱团体", cat: "music" },
+  // Cartoons & Film
+  { name: "Baibie",            chinese: "芭比",         cat: "cartoon" },
+  { name: "Bart Simpson",      chinese: "巴特辛普森",   cat: "cartoon" },
+  { name: "Bedrock",           chinese: "一首歌曲",     cat: "cartoon" },
+  { name: "Bernie",            chinese: "可卡因",       cat: "cartoon" },
+  { name: "Robocop",           chinese: "机械战警",     cat: "cartoon" },
+  { name: "Roger Rabbit",      chinese: "罗杰兔子",     cat: "cartoon" },
+  { name: "Smurf",             chinese: "蓝精灵",       cat: "cartoon" },
+  { name: "Spongebob",         chinese: "海绵宝宝",     cat: "cartoon" },
+  { name: "Super Man",         chinese: "超人",         cat: "cartoon" },
+  { name: "The Alf",           chinese: "阿尔夫",       cat: "cartoon" },
+  { name: "Tom And Jerry",     chinese: "汤姆和杰瑞",   cat: "cartoon" },
+  // People & Icons
+  { name: "Bad One",           chinese: "坏的",         cat: "celebrity" },
+  { name: "Camel Walk",        chinese: "骆驼步",       cat: "celebrity" },
+  { name: "Cameo",             chinese: "配角",         cat: "celebrity" },
+  { name: "Diddy Dance",       chinese: "迪迪舞",       cat: "celebrity" },
+  { name: "Dougie",            chinese: "道基舞",       cat: "celebrity" },
+  { name: "Father Mc",         chinese: "麦克爸爸",     cat: "celebrity" },
+  { name: "Jerry Lewis",       chinese: "杰瑞路易斯",   cat: "celebrity" },
+  { name: "Mike Tyson",        chinese: "迈克泰森",     cat: "celebrity" },
+  { name: "Moonwalk",          chinese: "太空步",       cat: "celebrity" },
+  { name: "Patty Duke",        chinese: "帕蒂杜克",     cat: "celebrity" },
+  { name: "Steve Martin",      chinese: "史蒂夫马丁",   cat: "celebrity" },
+  // Social Dances
+  { name: "Aunt Jack",         chinese: "杰克阿姨",     cat: "social" },
+  { name: "Baby",              chinese: "宝贝",         cat: "social" },
+  { name: "Bus Stop",          chinese: "公交汽车站",   cat: "social" },
+  { name: "Butterfly",         chinese: "蝴蝶",         cat: "social" },
+  { name: "Cabbage Patch",     chinese: "卷心菜",       cat: "social" },
+  { name: "Cat Daddy",         chinese: "猫爸爸",       cat: "social" },
+  { name: "City Boy",          chinese: "城市男孩",     cat: "social" },
+  { name: "Diddy Bop",         chinese: "大摇大摆",     cat: "social" },
+  { name: "Funky Chicken",     chinese: "时髦的鸡",     cat: "social" },
+  { name: "Gigolo",            chinese: "舞男",         cat: "social" },
+  { name: "Happy Feet",        chinese: "快乐的大脚",   cat: "social" },
+  { name: "Horse Move",        chinese: "马的移动",     cat: "social" },
+  { name: "Jerk",              chinese: "颠簸的进行",   cat: "social" },
+  { name: "Kids Play",         chinese: "小孩游戏",     cat: "social" },
+  { name: "Reject",            chinese: "拒绝",         cat: "social" },
+  { name: "Running Man",       chinese: "跑男",         cat: "social" },
+  { name: "Salsa",             chinese: "萨尔萨舞",     cat: "social" },
+  { name: "Shuffle",           chinese: "坐立不安",     cat: "social" },
+  { name: "The Wop",           chinese: "做wop",        cat: "social" },
+  { name: "Watergate",         chinese: "水闸",         cat: "social" },
+  // Pure Technique
+  { name: "Box Step",          chinese: "盒子步伐",     cat: "technique" },
+  { name: "Dipin",             chinese: "迪文",         cat: "technique" },
+  { name: "Heel Toe",          chinese: "脚跟脚尖",     cat: "technique" },
+  { name: "Heel Turn",         chinese: "足跟转",       cat: "technique" },
+  { name: "Lock In",           chinese: "锁定",         cat: "technique" },
+  { name: "Marge Step",        chinese: "边缘步",       cat: "technique" },
+  { name: "Pas De Bourree",    chinese: "三步交错步",   cat: "technique" },
+  { name: "Pop Corn",          chinese: "爆米花",       cat: "technique" },
+  { name: "Prep",              chinese: "准备活动",     cat: "technique" },
+  { name: "Roof Top",          chinese: "屋顶",         cat: "technique" },
+  { name: "Snap",              chinese: "断裂",         cat: "technique" },
+  { name: "Stick And Roll",    chinese: "粘滚",         cat: "technique" },
+  { name: "Thunder Clap",      chinese: "晴天霹雳",     cat: "technique" },
+  { name: "Tic Tac Toe",       chinese: "脚趾",         cat: "technique" },
+  { name: "Tone Whop",         chinese: "音调",         cat: "technique" },
+  // Footwork
+  { name: "Cross Step",        chinese: "交叉步",       cat: "footwork" },
+  { name: "Indian Step",       chinese: "印第安步",     cat: "footwork" },
+  { name: "Kent Step",         chinese: "踢跨一步",     cat: "footwork" },
+  { name: "Kick Ball Change",  chinese: "踢换球",       cat: "footwork" },
+  { name: "Kick Cross And Step", chinese: "踢跨一步",   cat: "footwork" },
+  { name: "Kick Step",         chinese: "踢步",         cat: "footwork" },
+  { name: "Snake Step",        chinese: "蛇步",         cat: "footwork" },
+  { name: "Stomp",             chinese: "踩脚",         cat: "footwork" },
+  { name: "Up Staris Down Staris", chinese: "楼上楼下", cat: "footwork" },
+  { name: "Yeek",              chinese: "横向四步",     cat: "footwork" },
+  // Waves & Isolations
+  { name: "Arm Wave",          chinese: "手臂波浪",     cat: "wave" },
+  { name: "Body Wave",         chinese: "身体波浪",     cat: "wave" },
+  { name: "Popper Seed",       chinese: "辣椒籽",       cat: "wave" },
+  { name: "Side Wave",         chinese: "侧身波浪",     cat: "wave" },
+  { name: "Snake",             chinese: "蛇",           cat: "wave" },
+  { name: "Water Dance",       chinese: "水舞",         cat: "wave" },
+  // Battle & Cipher
+  { name: "Bad Man",           chinese: "坏男人",       cat: "battle" },
+  { name: "E.F.",              chinese: "Elite Force团队缩写", cat: "battle" },
+  { name: "Oroginal Step",     chinese: "原始的步伐",   cat: "battle" },
+  { name: "Red Law",           chinese: "红色法律",     cat: "battle" },
+  { name: "Rock Off",          chinese: "摇滚入梦",     cat: "battle" },
+  // Fashion & Brands
+  { name: "Benetton",          chinese: "贝纳通；服饰品牌", cat: "fashion" },
+  { name: "Guess",             chinese: "盖尔斯；裤子品牌", cat: "fashion" },
+  { name: "Gucci",             chinese: "古驰；奢侈品牌",   cat: "fashion" },
+  { name: "Reebok",            chinese: "锐步；鞋子品牌",   cat: "fashion" },
+  { name: "The Fila",          chinese: "流氓暗号",     cat: "fashion" },
+  // Sports
+  { name: "Baseball",          chinese: "棒球",         cat: "sports" },
+  { name: "Basketball",        chinese: "篮球",         cat: "sports" },
+  { name: "Jump Rope",         chinese: "跳绳",         cat: "sports" },
+  // Mime & Character
+  { name: "Funky Four Corners", chinese: "时髦的四角",  cat: "mime" },
+  { name: "Funky Guitar",      chinese: "时髦的吉他",   cat: "mime" },
+  { name: "Get Lite",          chinese: "获取",         cat: "mime" },
+  { name: "Pick It Up And Chuck It", chinese: "把它捡起来扔掉", cat: "mime" },
+  { name: "Smeeze",            chinese: "打喷嚏",       cat: "mime" },
+  { name: "Typewriter",        chinese: "打字机",       cat: "mime" },
+];
+
+// Sort alphabetically within each category
+ELEMENTS.sort((a, b) => a.name.localeCompare(b.name));
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+
+let userData = {}; // { "Element Name": { year, origin, move, family, notes } }
+let currentElement = null;
+let githubSHA = null; // for updating the file
+
+const DRAWERS = ["year", "origin", "move", "family", "notes"];
+
+// ── GITHUB ────────────────────────────────────────────────────────────────
+
+function getConfig() {
+  return {
+    token: localStorage.getItem("ys_token"),
+    repo:  localStorage.getItem("ys_repo"),
+    file:  localStorage.getItem("ys_file") || "yuansu-data.json",
+  };
+}
+
+async function githubFetch(path, method = "GET", body = null) {
+  const { token } = getConfig();
+  const opts = {
+    method,
+    headers: {
+      "Authorization": `token ${token}`,
+      "Content-Type": "application/json",
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(`https://api.github.com/repos/${getConfig().repo}/contents/${getConfig().file}` + (path || ""), opts);
+}
+
+async function loadFromGitHub() {
+  try {
+    const res = await githubFetch("");
+    if (res.status === 404) {
+      // File doesn't exist yet — that's fine
+      userData = {};
+      githubSHA = null;
+      return;
+    }
+    const json = await res.json();
+    githubSHA = json.sha;
+    const decoded = atob(json.content.replace(/\n/g, ""));
+    userData = JSON.parse(decoded);
+  } catch (e) {
+    showToast("Could not load data from GitHub");
+  }
+}
+
+async function saveToGitHub() {
+  const { repo, file } = getConfig();
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(userData, null, 2))));
+  const body = {
+    message: "update yuansu data",
+    content,
+    ...(githubSHA ? { sha: githubSHA } : {}),
+  };
+  try {
+    const res = await githubFetch("", "PUT", body);
+    const json = await res.json();
+    if (json.content) {
+      githubSHA = json.content.sha;
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────────────
+
+function saveSetup() {
+  const token = document.getElementById("setup-token").value.trim();
+  const repo  = document.getElementById("setup-repo").value.trim();
+  const file  = document.getElementById("setup-file").value.trim() || "yuansu-data.json";
+  if (!token || !repo) { showToast("Please fill in token and repo"); return; }
+  localStorage.setItem("ys_token", token);
+  localStorage.setItem("ys_repo", repo);
+  localStorage.setItem("ys_file", file);
+  document.getElementById("setup-screen").classList.remove("active");
+  init();
+}
+
+function openSettings() {
+  const cfg = getConfig();
+  document.getElementById("setup-token").value = cfg.token || "";
+  document.getElementById("setup-repo").value  = cfg.repo  || "";
+  document.getElementById("setup-file").value  = cfg.file  || "yuansu-data.json";
+  document.getElementById("setup-screen").classList.add("active");
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────
+
+function getProgress(name) {
+  const d = userData[name];
+  if (!d) return [false, false, false, false, false];
+  return DRAWERS.map(k => !!(d[k] && d[k].trim()));
+}
+
+function countFurnished() {
+  return ELEMENTS.filter(el => getProgress(el.name).some(Boolean)).length;
+}
+
+function updateProgressDisplay() {
+  const n = countFurnished();
+  document.getElementById("progress-display").innerHTML =
+    `<em>${n}</em> / ${ELEMENTS.length} furnished`;
+}
+
+// ── LIST ──────────────────────────────────────────────────────────────────
+
+function renderList() {
+  const query = document.getElementById("search-input").value.toLowerCase().trim();
+  const container = document.getElementById("list-view");
+  let html = "";
+  let totalShown = 0;
+
+  CATEGORIES.forEach(cat => {
+    const els = ELEMENTS.filter(el => {
+      if (el.cat !== cat.id) return false;
+      if (!query) return true;
+      return el.name.toLowerCase().includes(query) || el.chinese.includes(query);
+    });
+    if (els.length === 0) return;
+    totalShown += els.length;
+
+    html += `<div class="category-section">
+      <div class="category-header">
+        <span class="category-emoji">${cat.emoji}</span>
+        <span class="category-name">${cat.label}</span>
+        <span class="category-count">${els.length}</span>
+      </div>`;
+
+    els.forEach(el => {
+      const prog = getProgress(el.name);
+      const dots = prog.map(f =>
+        `<div class="dot ${f ? "filled" : ""}"></div>`
+      ).join("");
+      html += `<div class="element-row" onclick="openCabinet('${el.name.replace(/'/g, "\\'")}')">
+        <div class="element-names">
+          <div class="element-name">${el.name}</div>
+          <div class="element-chinese">${el.chinese}</div>
+        </div>
+        <div class="element-dots">${dots}</div>
+        <div class="element-arrow">›</div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  if (totalShown === 0) {
+    html = `<div class="no-results">nothing found for "${query}"</div>`;
+  }
+
+  container.innerHTML = html;
+  updateProgressDisplay();
+}
+
+// ── CABINET ───────────────────────────────────────────────────────────────
+
+function openCabinet(name) {
+  currentElement = ELEMENTS.find(el => el.name === name);
+  if (!currentElement) return;
+
+  document.getElementById("cabinet-name").textContent = currentElement.name;
+  document.getElementById("cabinet-chinese").textContent = currentElement.chinese;
+
+  const data = userData[name] || {};
+  DRAWERS.forEach(k => {
+    document.getElementById(`drawer-${k}`).value = data[k] || "";
+    updateDrawerDot(k, data[k]);
+  });
+
+  updateCabinetDots();
+  document.getElementById("save-status").textContent = "";
+  document.getElementById("cabinet").classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function closeCabinet() {
+  document.getElementById("cabinet").classList.remove("active");
+  currentElement = null;
+  renderList();
+}
+
+function updateDrawerDot(key, value) {
+  const dot = document.getElementById(`dot-${key}`);
+  if (!dot) return;
+  const filled = !!(value && value.trim());
+  dot.classList.toggle("filled", filled);
+}
+
+function updateCabinetDots() {
+  if (!currentElement) return;
+  const data = userData[currentElement.name] || {};
+  const prog = DRAWERS.map(k => !!(data[k] && data[k].trim()));
+  const container = document.getElementById("cabinet-dots");
+  container.innerHTML = prog.map(f =>
+    `<div class="cabinet-dot ${f ? "filled" : ""}"></div>`
+  ).join("");
+}
+
+// live dot update as user types
+DRAWERS.forEach(k => {
+  document.addEventListener("DOMContentLoaded", () => {
+    const ta = document.getElementById(`drawer-${k}`);
+    if (ta) ta.addEventListener("input", () => updateDrawerDot(k, ta.value));
+  });
+});
+
+async function saveCabinet() {
+  if (!currentElement) return;
+  const btn = document.getElementById("save-btn");
+  const status = document.getElementById("save-status");
+  btn.disabled = true;
+  status.textContent = "saving...";
+
+  const data = {};
+  DRAWERS.forEach(k => {
+    data[k] = document.getElementById(`drawer-${k}`).value;
+  });
+  userData[currentElement.name] = data;
+
+  const ok = await saveToGitHub();
+  btn.disabled = false;
+
+  if (ok) {
+    status.textContent = "saved ✓";
+    updateCabinetDots();
+    showToast("Saved to GitHub");
+  } else {
+    status.textContent = "error — try again";
+    showToast("Save failed — check connection");
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+async function init() {
+  const { token, repo } = getConfig();
+  if (!token || !repo) {
+    document.getElementById("setup-screen").classList.add("active");
+    return;
+  }
+  renderList();
+  await loadFromGitHub();
+  renderList();
+}
+
+// Attach live drawer dot listeners after DOM ready
+document.addEventListener("DOMContentLoaded", () => {
+  DRAWERS.forEach(k => {
+    const ta = document.getElementById(`drawer-${k}`);
+    if (ta) ta.addEventListener("input", () => updateDrawerDot(k, ta.value));
+  });
+  init();
+});
+</script>
+</body>
+</html>
